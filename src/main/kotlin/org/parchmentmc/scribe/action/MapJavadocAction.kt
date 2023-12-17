@@ -110,7 +110,7 @@ class MapJavadocAction : MappingAction() {
         if (allSuperMethods.isNotEmpty()) {
             allSuperMethods.add(0, method)
             val editor = e.getData(CommonDataKeys.EDITOR) ?: return
-            e.updateSession.compute(this, "createPopup", ActionUpdateThread.EDT) {
+            e.updateSession!!.compute(this, "createPopup", ActionUpdateThread.EDT) {
                 @Suppress("UnstableApiUsage")
                 val popup = createTargetPopup("Choose method in inheritance structure to map", allSuperMethods, ::targetPresentation) { targetMethod -> mapFun(targetMethod) }
                 popup.showInBestPositionFor(editor)

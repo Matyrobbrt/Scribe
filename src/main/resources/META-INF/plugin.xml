@@ -22,7 +22,7 @@
 -->
 
 <idea-plugin url="https://github.com/ParchmentMC/Scribe">
-    <idea-version since-build="231.8770.17"/>
+    <idea-version since-build="231.8109.175"/>
     <id>org.parchmentmc.scribe</id>
     <name>Scribe</name>
     <vendor>ParchmentMC</vendor>
@@ -50,6 +50,8 @@
     <depends>ByteCodeViewer</depends>
 
     <extensions defaultExtensionNs="com.intellij">
+        <lang.foldingBuilder language="JAVA" implementationClass="org.parchmentmc.scribe.hints.TestFolding"/>
+
         <codeInsight.inlayProvider language="JAVA" implementationClass="org.parchmentmc.scribe.hints.ParchmentHintProvider"/>
         <projectService serviceImplementation="org.parchmentmc.scribe.settings.ParchmentProjectSettings"/>
 
