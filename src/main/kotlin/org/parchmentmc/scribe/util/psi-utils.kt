@@ -14,18 +14,19 @@ import com.intellij.openapi.externalSystem.model.DataNode
 import com.intellij.openapi.externalSystem.model.project.ModuleData
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleUtilCore
-import com.intellij.psi.JavaPsiFacade
-import com.intellij.psi.PsiClass
-import com.intellij.psi.PsiDirectory
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
-import com.intellij.psi.PsiMethod
-import com.intellij.psi.PsiModifier
-import com.intellij.psi.PsiReference
-import com.intellij.psi.PsiType
+import com.intellij.psi.*
+import com.intellij.psi.impl.light.*
+import com.intellij.psi.impl.source.DummyHolderElement
+import com.intellij.psi.impl.source.javadoc.PsiDocCommentImpl
+import com.intellij.psi.javadoc.PsiDocComment
 import com.intellij.psi.util.InheritanceUtil
 import com.intellij.psi.util.TypeConversionUtil
+import com.intellij.util.ui.tree.TreeUtil
 import org.jetbrains.plugins.gradle.util.GradleUtil
+import org.parchmentmc.feather.mapping.MappingDataContainer
+import org.parchmentmc.feather.mapping.MappingDataContainer.ClassData
+import org.parchmentmc.feather.mapping.MappingDataContainer.FieldData
+import org.parchmentmc.feather.mapping.MappingDataContainer.MethodData
 
 fun PsiElement.findModule(): Module? = ModuleUtilCore.findModuleForPsiElement(this)
 
@@ -140,3 +141,104 @@ fun PsiClass.findAllSuperConstructors(descriptor: String): MutableList<PsiMethod
     return all
 }
 
+fun PsiMethod.copyFromParchment(parchment: MethodData, withJdoc: Boolean = true): LightMethodBuilder {
+    val params = LightParameterListBuilder(getManager(), getLanguage())
+    for (parameter in getParameterList().getParameters()) {
+        val pd = parchment.getParameter(parameter.jvmIndex)
+        if (pd == null || pd.name == null) {
+            params.addParameter(parameter)
+        } else {
+            params.addParameter(LightParameter(pd.name!!, parameter.type, this, parameter.language, parameter.isVarArgs))
+        }
+    }
+
+    var jdoc: String? = null
+    if ((parchment.javadoc.isNotEmpty() || parchment.parameters.any { it.javadoc != null }) && withJdoc) {
+        jdoc = "/**\n"
+        jdoc += parchment.javadoc.joinToString("\n")
+        parchment.parameters.forEach {
+            if (it.javadoc != null)
+                jdoc += "\n@param ${it.name ?: getParameterByJvmIndex(it.index)!!.name} ${it.javadoc}"
+        }
+        jdoc += "\n*/"
+    }
+
+    val old = this
+    return object : LightMethodBuilder(
+        getManager(),
+        getLanguage(),
+        getName(),
+        params,
+        getModifierList(),
+        getThrowsList(),
+        getTypeParameterList()
+    ) {
+        var docs: PsiDocComment? = null
+        override fun getDocComment(): PsiDocComment? {
+            if (docs == null && jdoc != null) {
+                docs = JavaPsiFacade.getInstance(project).elementFactory.createDocCommentFromText(jdoc, old);
+            }
+            return docs
+        }
+    }.setContainingClass(getContainingClass()).setConstructor(this.isConstructor)
+}
+
+fun PsiField.copyFromParchment(parchment: FieldData): PsiField {
+    val old = this
+    val oldModifiers = modifierList!!
+    return object : LightFieldBuilder(name, type, navigationElement) {
+        override fun isDeprecated(): Boolean {
+            return old.isDeprecated
+        }
+
+        override fun getInitializer(): PsiExpression? {
+            return old.initializer
+        }
+
+        init {
+            setModifierList(object : LightModifierList(old) {
+                override fun getAnnotations(): Array<PsiAnnotation> = oldModifiers.annotations
+
+                override fun getApplicableAnnotations(): Array<PsiAnnotation> = oldModifiers.applicableAnnotations
+            })
+
+            if (parchment.javadoc.isNotEmpty()) {
+                setDocComment(JavaPsiFacade.getInstance(project).elementFactory.createDocCommentFromText(
+                    "/**\n" + parchment.javadoc.joinToString("\n") + "\n*/", old
+                ))
+            }
+        }
+
+        override fun getNavigationElement(): PsiElement = this
+    }.setContainingClass(containingClass)
+}
+
+fun PsiClass.copyFromParchment(parchment: ClassData): PsiClass {
+    val old = this
+    return object : LightPsiClassBuilder(context!!, name!!) {
+        var docs: PsiDocComment? = null
+        override fun getDocComment(): PsiDocComment? {
+            if (docs == null && parchment.javadoc.isNotEmpty()) {
+                docs = JavaPsiFacade.getInstance(project).elementFactory.createDocCommentFromText("/**\n" + parchment.javadoc.joinToString("\n") + "\n*/", old);
+            }
+            return docs
+        }
+
+        override fun getAnnotations(): Array<PsiAnnotation> {
+            return old.annotations
+        }
+
+        init {
+            modifierList.copyModifiers(old.modifierList)
+            old.implementsList?.referencedTypes?.forEach {
+                implementsList.addReference(it)
+            }
+            old.extendsList?.referencedTypes?.forEach {
+                extendsList.addReference(it)
+            }
+            old.typeParameterList?.typeParameters?.forEach {
+                typeParameterList.addParameter(it)
+            }
+        }
+    }
+}

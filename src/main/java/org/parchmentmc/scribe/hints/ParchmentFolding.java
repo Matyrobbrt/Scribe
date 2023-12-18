@@ -73,9 +73,6 @@ public class ParchmentFolding extends CustomFoldingBuilder implements DumbAware 
                         .getClassData(aClass, false) == null) return;
 
                 for (PsiMethod method : aClass.getMethods()) {
-                    final var mt = ParchmentMappings.Companion.getInstance(file.getProject())
-                            .getMethodData(method, false, true);
-                    if (mt == null) continue;
                     final Map<String, String> parameterMapping = new HashMap<>();
 
                     method.accept(new JavaRecursiveElementWalkingVisitor() {

@@ -50,6 +50,7 @@
     <depends>ByteCodeViewer</depends>
 
     <extensions defaultExtensionNs="com.intellij">
+        <platform.backend.documentation.psiTargetProvider implementationClass="org.parchmentmc.scribe.hints.ParchmentDocs" />
         <lang.foldingBuilder language="JAVA" implementationClass="org.parchmentmc.scribe.hints.ParchmentFolding"/>
         <codeInsight.inlayProvider language="JAVA" implementationClass="org.parchmentmc.scribe.hints.ParchmentHintProvider"/>
         <projectService serviceImplementation="org.parchmentmc.scribe.settings.ParchmentProjectSettings"/>
