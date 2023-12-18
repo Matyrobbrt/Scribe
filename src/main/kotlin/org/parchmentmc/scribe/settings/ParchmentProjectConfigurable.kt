@@ -24,6 +24,7 @@
 package org.parchmentmc.scribe.settings
 
 import com.intellij.openapi.fileChooser.FileChooserDescriptor
+import com.intellij.openapi.observable.properties.ObservableProperty
 import com.intellij.openapi.options.BoundConfigurable
 import com.intellij.openapi.options.SearchableConfigurable
 import com.intellij.openapi.project.Project
@@ -36,6 +37,7 @@ import com.intellij.ui.dsl.builder.bindSelected
 import com.intellij.ui.dsl.builder.bindText
 import com.intellij.ui.dsl.builder.columns
 import com.intellij.ui.dsl.builder.panel
+import com.intellij.ui.layout.ComponentPredicate
 import org.parchmentmc.scribe.ParchmentMappings
 import java.io.IOException
 
@@ -81,6 +83,17 @@ class ParchmentProjectConfigurable(private val project: Project) : BoundConfigur
             checkBox("Remap Parameters")
                 .bindSelected(settings::remapParameters)
                 .comment("Determines whether Scribe should automatically remap parameters when inserting constructors and overrides.")
+        }
+        row {
+            checkBox("Fold mapped parameters")
+                .bindSelected(settings::fold)
+                .onChanged {
+                    settings.fold = false
+                }
+                .comment("Whether parameters should be folded into their mapped name in Minecraft source code")
+            checkBox("Frozen folding")
+                .bindSelected(settings::frozenFolding)
+                .comment("If true, folded parameters cannot be expanded")
         }
     }
 

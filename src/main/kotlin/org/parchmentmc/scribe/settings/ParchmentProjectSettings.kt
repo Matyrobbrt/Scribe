@@ -35,6 +35,8 @@ class ParchmentProjectSettings : PersistentStateComponent<ParchmentProjectSettin
     data class State(
         var mappingsPath: String = "",
         var displayHints: Boolean = true,
+        var fold: Boolean = true,
+        var frozenFolding: Boolean = true,
         var remapParameters: Boolean = true
     )
 
@@ -70,6 +72,18 @@ class ParchmentProjectSettings : PersistentStateComponent<ParchmentProjectSettin
         get() = state.remapParameters
         set(value) {
             state.remapParameters = value
+        }
+
+    var fold: Boolean
+        get() = state.fold
+        set(value) {
+            state.fold = value
+        }
+
+    var frozenFolding: Boolean
+        get() = state.frozenFolding
+        set(value) {
+            state.frozenFolding = value
         }
 
     companion object {

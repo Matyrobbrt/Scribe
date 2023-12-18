@@ -92,7 +92,7 @@ class ParchmentMappings(project: Project) {
         }
     }
 
-    fun getMappingsPathAsPath() = Paths.get("M:\\temp\\MDK\\parchment-1.20.2-2023.12.10.zip")!!
+    fun getMappingsPathAsPath() = settings.mappingsPath.nullize(nullizeSpaces = true)?.let(Paths::get)
 
     fun getParameterMapping(parameter: PsiParameter, create: Boolean = false, searchSupers: Boolean = false) = getParameterData(parameter, create, searchSupers)?.name
 

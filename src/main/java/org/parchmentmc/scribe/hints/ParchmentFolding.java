@@ -1,17 +1,37 @@
+/*
+ * Scribe
+ * Copyright (C) 2023 ParchmentMC
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 package org.parchmentmc.scribe.hints;
 
 import com.intellij.lang.ASTNode;
 import com.intellij.lang.folding.CustomFoldingBuilder;
 import com.intellij.lang.folding.FoldingDescriptor;
-import com.intellij.lang.jvm.JvmModifier;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.JavaRecursiveElementWalkingVisitor;
 import com.intellij.psi.PsiAnonymousClass;
-import com.intellij.psi.PsiAssignmentExpression;
 import com.intellij.psi.PsiClass;
-import com.intellij.psi.PsiCodeBlock;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiJavaFile;
@@ -23,11 +43,11 @@ import com.intellij.psi.PsiReferenceExpression;
 import com.intellij.psi.PsiReferenceList;
 import com.intellij.psi.PsiReferenceParameterList;
 import com.intellij.psi.PsiReturnStatement;
-import com.intellij.psi.PsiStatement;
 import com.intellij.psi.PsiSuperExpression;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.parchmentmc.scribe.ParchmentMappings;
+import org.parchmentmc.scribe.settings.ParchmentProjectSettings;
 import org.parchmentmc.scribe.util.Desc_index_utilsKt;
 
 import java.util.Collections;
@@ -35,14 +55,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
-public class TestFolding extends CustomFoldingBuilder implements DumbAware {
+public class ParchmentFolding extends CustomFoldingBuilder implements DumbAware {
 
     @Override
     protected void buildLanguageFoldRegions(@NotNull List<FoldingDescriptor> descriptors, @NotNull PsiElement root, @NotNull Document document, boolean quick) {
-        if (!(root instanceof PsiJavaFile)) return;
-        PsiJavaFile file = (PsiJavaFile) root;
+        if (!(root instanceof PsiJavaFile file)) return;
+        if (!ParchmentProjectSettings.Companion.getInstance(root.getProject()).getFold()) {
+            return;
+        }
 
         PsiClass[] classes = file.getClasses();
         final Consumer<PsiClass> cons = new Consumer<>() {
@@ -239,7 +260,8 @@ public class TestFolding extends CustomFoldingBuilder implements DumbAware {
                 return;
             }
         }
-        list.add(new FoldingDescriptor(elementToFold.getNode(), range, null, Collections.emptySet(), true, placeholder, isCollapsedByDefault));
+        list.add(new FoldingDescriptor(elementToFold.getNode(), range, null, Collections.emptySet(),
+                ParchmentProjectSettings.Companion.getInstance(elementToFold.getProject()).getFrozenFolding(), placeholder, isCollapsedByDefault));
     }
 
     @Override

@@ -50,10 +50,16 @@
     <depends>ByteCodeViewer</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <lang.foldingBuilder language="JAVA" implementationClass="org.parchmentmc.scribe.hints.TestFolding"/>
-
+        <lang.foldingBuilder language="JAVA" implementationClass="org.parchmentmc.scribe.hints.ParchmentFolding"/>
         <codeInsight.inlayProvider language="JAVA" implementationClass="org.parchmentmc.scribe.hints.ParchmentHintProvider"/>
         <projectService serviceImplementation="org.parchmentmc.scribe.settings.ParchmentProjectSettings"/>
+
+        <codeInsight.parameterInfo language="JAVA" order="first" implementationClass="org.parchmentmc.scribe.hints.ParchmentParamInfoHandler"/>
+
+        <completion.contributor language="JAVA" id="parchment" implementationClass="org.parchmentmc.scribe.hints.ParchmentContributor"
+                                order="first"/>
+
+        <codeInsight.parameterNameHints language="JAVA" implementationClass="org.parchmentmc.scribe.hints.InlayParamHints" order="first"/>
 
         <projectConfigurable displayName="Parchment Mappings"
                              parentId="tools"

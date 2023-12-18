@@ -12,6 +12,7 @@ package org.parchmentmc.scribe.util
 
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.DumbService
+import com.intellij.openapi.project.IndexNotReadyException
 import com.intellij.openapi.util.Key
 import com.intellij.psi.JavaRecursiveElementWalkingVisitor
 import com.intellij.psi.LambdaUtil
@@ -27,6 +28,7 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifier
 import com.intellij.psi.PsiPrimitiveType
 import com.intellij.psi.PsiType
+import com.intellij.psi.PsiTypes
 import com.intellij.psi.PsiWildcardType
 import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
@@ -47,29 +49,29 @@ private val LAMBDA_NAME_KEY = Key.create<ParameterizedCachedValue<Object2IntMap<
 
 val PsiPrimitiveType.internalName: Char
     get() = when (this) {
-        PsiType.BYTE -> 'B'
-        PsiType.CHAR -> 'C'
-        PsiType.DOUBLE -> 'D'
-        PsiType.FLOAT -> 'F'
-        PsiType.INT -> 'I'
-        PsiType.LONG -> 'J'
-        PsiType.SHORT -> 'S'
-        PsiType.BOOLEAN -> 'Z'
-        PsiType.VOID -> 'V'
+        PsiTypes.byteType() -> 'B'
+        PsiTypes.charType() -> 'C'
+        PsiTypes.doubleType() -> 'D'
+        PsiTypes.floatType() -> 'F'
+        PsiTypes.intType() -> 'I'
+        PsiTypes.longType() -> 'J'
+        PsiTypes.shortType() -> 'S'
+        PsiTypes.booleanType() -> 'Z'
+        PsiTypes.voidType() -> 'V'
         else -> throw IllegalArgumentException("Unsupported primitive type: $this")
     }
 
 fun getPrimitiveType(internalName: Char): PsiPrimitiveType? {
     return when (internalName) {
-        'B' -> PsiPrimitiveType.BYTE
-        'C' -> PsiPrimitiveType.CHAR
-        'D' -> PsiPrimitiveType.DOUBLE
-        'F' -> PsiPrimitiveType.FLOAT
-        'I' -> PsiPrimitiveType.INT
-        'J' -> PsiPrimitiveType.LONG
-        'S' -> PsiPrimitiveType.SHORT
-        'Z' -> PsiPrimitiveType.BOOLEAN
-        'V' -> PsiPrimitiveType.VOID
+        'B' -> PsiTypes.byteType()
+        'C' -> PsiTypes.charType()
+        'D' -> PsiTypes.doubleType()
+        'F' -> PsiTypes.floatType()
+        'I' -> PsiTypes.intType()
+        'J' -> PsiTypes.longType()
+        'S' -> PsiTypes.shortType()
+        'Z' -> PsiTypes.booleanType()
+        'V' -> PsiTypes.voidType()
         else -> null
     }
 }
@@ -77,8 +79,13 @@ fun getPrimitiveType(internalName: Char): PsiPrimitiveType? {
 private fun PsiClassType.erasure() = TypeConversionUtil.erasure(this) as PsiClassType
 
 @Throws(ClassNameResolutionFailedException::class)
-private fun PsiClassType.appendInternalName(builder: StringBuilder): StringBuilder =
-    erasure().resolve()?.appendInternalName(builder) ?: builder
+private fun PsiClassType.appendInternalName(builder: StringBuilder): StringBuilder {
+    return try {
+        erasure().resolve()?.appendInternalName(builder) ?: builder
+    } catch (e: IndexNotReadyException) {
+        builder
+    }
+}
 
 @Throws(ClassNameResolutionFailedException::class)
 private fun PsiType.appendDescriptor(builder: StringBuilder): StringBuilder {
@@ -135,7 +142,7 @@ private fun PsiMethod.appendDescriptor(builder: StringBuilder): StringBuilder {
         parameter.type.appendDescriptor(builder)
     }
     builder.append(')')
-    return (returnType ?: PsiPrimitiveType.VOID).appendDescriptor(builder)
+    return (returnType ?: PsiTypes.voidType()).appendDescriptor(builder)
 }
 
 // Lambda
@@ -246,7 +253,7 @@ private fun PsiLambdaExpression.appendDescriptor(builder: StringBuilder): String
         LambdaUtil.getLambdaParameterFromType(functionalInterfaceType, i)?.appendDescriptor(builder)
     }
     builder.append(')')
-    return (LambdaUtil.getFunctionalInterfaceReturnType(functionalInterfaceType) ?: PsiPrimitiveType.VOID).appendDescriptor(builder)
+    return (LambdaUtil.getFunctionalInterfaceReturnType(functionalInterfaceType) ?: PsiTypes.voidType()).appendDescriptor(builder)
 }
 
 // Field
