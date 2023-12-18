@@ -1,6 +1,6 @@
-# ExpandedScribe
+# ExtendedScribe
 ## Fork
-ExpandedScribe is a **hacky** fork of Scribe that also adds folding to show the parameter names,
+ExtendedScribe is a **hacky** fork of Scribe that also adds folding to show the parameter names,
 and makes the hint provider and method docs use mapped names. Documentations will also include Parchment javadocs.
 
 ## Scribe

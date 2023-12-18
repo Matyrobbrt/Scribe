@@ -24,7 +24,7 @@
 <idea-plugin url="https://github.com/Matyrobbrt/Scribe">
     <idea-version since-build="231.8109.175"/>
     <id>org.matyrobbrt.scribe</id>
-    <name>ExpandedScribe</name>
+    <name>ExtendedScribe</name>
     <vendor>Matyrobbrt</vendor>
 
     <description><![CDATA[
