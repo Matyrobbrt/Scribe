@@ -1,4 +1,9 @@
-# Scribe
+# ExpandedScribe
+## Fork
+ExpandedScribe is a **hacky** fork of Scribe that also adds folding to show the parameter names,
+and makes the hint provider and method docs use mapped names. Documentations will also include Parchment javadocs.
+
+## Scribe
 Scribe is an IntelliJ IDEA plugin that integrates with [Parchment mappings](https://github.com/ParchmentMC/Parchment).
 Supported features include:
 * Loading mapping data from a Parchment data folder, export JSON file, or ZIP archive and displaying parameter hints

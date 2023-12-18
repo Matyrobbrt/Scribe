@@ -21,13 +21,15 @@
     SOFTWARE.
 -->
 
-<idea-plugin url="https://github.com/ParchmentMC/Scribe">
+<idea-plugin url="https://github.com/Matyrobbrt/Scribe">
     <idea-version since-build="231.8109.175"/>
-    <id>org.parchmentmc.scribe</id>
-    <name>Scribe</name>
-    <vendor>ParchmentMC</vendor>
+    <id>org.matyrobbrt.scribe</id>
+    <name>ExpandedScribe</name>
+    <vendor>Matyrobbrt</vendor>
 
     <description><![CDATA[
+      <b>Unofficial fork of Scribe with extra features, renaming parameters everywhere, not just in small hints.</b>
+
       This plugin adds integration with Parchment to IntelliJ.
       <br/><br/>
       Currently supported features are:
