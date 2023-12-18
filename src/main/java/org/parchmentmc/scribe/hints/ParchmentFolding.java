@@ -28,6 +28,7 @@ import com.intellij.lang.folding.CustomFoldingBuilder;
 import com.intellij.lang.folding.FoldingDescriptor;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.project.DumbAware;
+import com.intellij.openapi.project.IndexNotReadyException;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.JavaRecursiveElementWalkingVisitor;
 import com.intellij.psi.PsiAnonymousClass;
@@ -69,8 +70,7 @@ public class ParchmentFolding extends CustomFoldingBuilder implements DumbAware 
         final Consumer<PsiClass> cons = new Consumer<>() {
             @Override
             public void accept(PsiClass aClass) {
-                if (ParchmentMappings.Companion.getInstance(file.getProject())
-                        .getClassData(aClass, false) == null) return;
+                if (aClass.getQualifiedName() == null || (!aClass.getQualifiedName().startsWith("net.minecraft") && !aClass.getQualifiedName().startsWith("com.mojang"))) return;
 
                 for (PsiMethod method : aClass.getMethods()) {
                     final Map<String, String> parameterMapping = new HashMap<>();
@@ -100,34 +100,42 @@ public class ParchmentFolding extends CustomFoldingBuilder implements DumbAware 
 
                         @Override
                         public void visitMethod(@NotNull PsiMethod method) {
-                            final var mt = ParchmentMappings.Companion.getInstance(file.getProject())
-                                    .getMethodData(method, false, true);
-                            if (mt != null) {
-                                mt.getParameters()
-                                        .forEach(par -> parameterMapping.put(Desc_index_utilsKt.getParameterByJvmIndex(method, par.getIndex()).getName(), par.getName()));
+                            try {
+                                final var mt = ParchmentMappings.Companion.getInstance(file.getProject())
+                                        .getMethodData(method, false, true);
+                                if (mt != null) {
+                                    mt.getParameters()
+                                            .forEach(par -> parameterMapping.put(Desc_index_utilsKt.getParameterByJvmIndex(method, par.getIndex()).getName(), par.getName()));
+                                }
+                            } catch (IndexNotReadyException ignored) {
+
                             }
                             method.acceptChildren(this);
                         }
 
                         @Override
                         public void visitLambdaExpression(@NotNull PsiLambdaExpression expression) {
-                            final var lambda = ParchmentMappings.Companion.getInstance(file.getProject()).getMethodData(expression, false);
-                            if (lambda != null) {
-                                for (PsiParameter parameter : expression.getParameterList().getParameters()) {
-                                    final var mapped = lambda.getParameter(Desc_index_utilsKt.getJvmIndex(parameter));
-                                    if (mapped != null) {
-                                        parameterMapping.put(parameter.getName(), mapped.getName());
-                                        addToFold(
-                                                descriptors,
-                                                parameter,
-                                                document,
-                                                true,
-                                                mapped.getName(),
-                                                parameter.getNameIdentifier().getTextRange(),
-                                                true
-                                        );
+                            try {
+                                final var lambda = ParchmentMappings.Companion.getInstance(file.getProject()).getMethodData(expression, false);
+                                if (lambda != null) {
+                                    for (PsiParameter parameter : expression.getParameterList().getParameters()) {
+                                        final var mapped = lambda.getParameter(Desc_index_utilsKt.getJvmIndex(parameter));
+                                        if (mapped != null) {
+                                            parameterMapping.put(parameter.getName(), mapped.getName());
+                                            addToFold(
+                                                    descriptors,
+                                                    parameter,
+                                                    document,
+                                                    true,
+                                                    mapped.getName(),
+                                                    parameter.getNameIdentifier().getTextRange(),
+                                                    true
+                                            );
+                                        }
                                     }
                                 }
+                            } catch (IndexNotReadyException ignored) {
+
                             }
 
                             if (expression.getBody() != null) {
